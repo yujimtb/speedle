@@ -1,6 +1,10 @@
 export function Changelog() {
   return (
     <div className="App-changelog">
+      <p><strong>2025-12-07</strong></p>
+      <ul>
+        <li>Added no-letter variant. (Typed letters are not shown; intended to be used together with blind mode, by request.)</li>
+      </ul>
       <p><strong>2022-07-13</strong></p>
       <ul>
         <li>Updated hello wordl wordlist (the words ADMIN and SIRWAL can now be guessed, and several possible target words were removed).</li>

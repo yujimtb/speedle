@@ -56,6 +56,7 @@ function App() {
   const [delay, setDelay] = useSetting<number>("delay", 0);
   const [penalty, setPenalty] = useSetting<number>("penalty", 0);
   const [blind, setBlind] = useSetting<boolean>("blind", false);
+  const [noletter, setNoletter] = useSetting<boolean>("noletter", false);
   const [nokbd, setNokbd] = useSetting<boolean>("nokbd", false);
   const [wordlist, setWordlist] = useSetting<string>("wordlist", 'hw');
 
@@ -286,6 +287,15 @@ function App() {
           </div>
           <div className="Settings-setting">
             <input
+              id="noletter-setting"
+              type="checkbox"
+              checked={noletter}
+              onChange={() => setNoletter((x: boolean) => !x)}
+            />
+            <label htmlFor="noletter-setting">Hide typed letters</label>
+          </div>
+          <div className="Settings-setting">
+            <input
               id="nokbd-setting"
               type="checkbox"
               checked={nokbd}
@@ -325,6 +335,7 @@ function App() {
         delay={delay}
         penalty={penalty}
         blind={blind}
+        noletter={noletter}
         nokbd={nokbd}
         keyboardLayout={keyboard.replaceAll(
           /[BE]/g,

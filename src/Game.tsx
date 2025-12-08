@@ -38,6 +38,7 @@ interface GameProps {
   delay: number;
   penalty: number;
   blind: boolean;
+  noletter: boolean;
   nokbd: boolean;
   chlink: any; // TODO lol
   wordlist: WordList;
@@ -237,6 +238,7 @@ function Game(props: GameProps) {
 
   const variants =
     (props.blind ? 'B' : '') +
+    (props.noletter ? 'L' : '') +
     (props.nokbd ? 'K' : '');
 
   const mode = `v01-${diffstring}${lenstring}x${props.morelen[0]}` +
@@ -378,6 +380,7 @@ function Game(props: GameProps) {
           cluedLetters={cluedLetters}
           revealStep={revealStep}
           blind={props.blind}
+          noletter={props.noletter}
         />
       );
     });
