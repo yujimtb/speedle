@@ -219,6 +219,14 @@ function Game(props: GameProps) {
       setHint("");
     } else if (key === "Enter") {
       submit(currentGuess);
+    } else if (key === " ") {
+      // Space clears the current guess, or gives up if it's already empty.
+      if (currentGuess !== "") {
+        setCurrentGuess("");
+        setHint("");
+      } else if (guesses.length > 0) {
+        giveUp();
+      }
     } else if (!inGame && key === "ArrowLeft") {
       newWithLength((x: number) => Math.max(x-1, minLength));
     } else if (!inGame && key === "ArrowRight") {
@@ -263,6 +271,14 @@ function Game(props: GameProps) {
       localStorage.setItem('log_'+mode,
                            (localStorage.getItem('log_'+mode) || '') +
                                ',' + target + ' ' + (correct ? dur : 0));
+  };
+
+  const giveUp = () => {
+    setHint(
+      `The answer was ${target.toUpperCase()}. (Enter to play again)`
+    );
+    setGameState(GameState.Lost);
+    log(target, false);
   };
 
   const submit = (guess: string, autoing: boolean = false) => {
@@ -340,7 +356,7 @@ function Game(props: GameProps) {
       if (!e.ctrlKey && !e.metaKey) {
         onKey(e.key);
       }
-      if (e.key === "Backspace") {
+      if (e.key === "Backspace" || e.key === " ") {
         e.preventDefault();
       }
     };
@@ -348,7 +364,7 @@ function Game(props: GameProps) {
     return () => {
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [currentGuess, gameState, noev, revealStep, inGame]);
+  }, [currentGuess, guesses, gameState, noev, revealStep, inGame]);
 
   let letterInfo = new Map<string, Clue>();
   const tableRows = Array(props.maxGuesses)
@@ -403,11 +419,7 @@ function Game(props: GameProps) {
           style={{ flex: "0 0 auto" }}
           disabled={gameState !== GameState.Playing || guesses.length === 0}
           onClick={() => {
-            setHint(
-              `The answer was ${target.toUpperCase()}. (Enter to play again)`
-            );
-            setGameState(GameState.Lost);
-            log(target, false);
+            giveUp();
             (document.activeElement as HTMLElement)?.blur();
           }}
         >
