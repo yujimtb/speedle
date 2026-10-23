@@ -374,6 +374,35 @@ a:active {
   background-color: rgba(0, 255, 128, 0.15);
 }
 
+.Game-timer2-typos {
+  margin-left: auto;
+  font-size: 9pt;
+  color: hsl(0, 90%, 40%);
+}
+
+.TypoStats table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+.TypoStats td,
+.TypoStats th {
+  padding: 2px 6px;
+  text-align: right;
+}
+
+.TypoStats td:first-child,
+.TypoStats th:first-child {
+  text-align: left;
+  font-family: monospace;
+}
+
+.TypoStats-openers {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 
 
 .Game-main {

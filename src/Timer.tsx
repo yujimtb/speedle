@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { typoRate } from "./typos";
 
 interface TimerProps {
   count: number;
@@ -11,6 +12,7 @@ interface Timer2Props {
   mode: string;
   firstKeyTiming: boolean;
   hibest: string;
+  sessionTypos: { typos: number, enters: number };
 }
 
 export interface Time {
@@ -18,7 +20,8 @@ export interface Time {
   time: number,
   firstKey: number,
   penalty: number,
-  correct: boolean
+  correct: boolean,
+  typos: number
 }
 
 interface TimeData {
@@ -111,12 +114,14 @@ export function Timer2(props: Timer2Props) {
     word: '',
     time: 0,
     bonus: 0,
-    correct: true
+    correct: true,
+    typos: 0
   } : {
     word: t.word,
     time: (t.time - props.times[i-1].time) / 1000 + t.penalty,
     bonus: (t.firstKey - props.times[i-1].time) / 1000,
-    correct: t.correct
+    correct: t.correct,
+    typos: t.typos
   }).slice(1);
 
   const goodIndices = diffs.reduce((acc, t, idx) => (
@@ -214,6 +219,9 @@ export function Timer2(props: Timer2Props) {
                 }}>
                 {t.time.toFixed(2)}
               </div>
+              {t.typos > 0 && <div className="Game-timer2-typos" title="typos">
+                ×{t.typos}
+              </div>}
             </div>
           );
         }).reverse()}
@@ -243,6 +251,15 @@ export function Timer2(props: Timer2Props) {
           </div>
         : undefined}
       </>)}
+      <div className="Game-timer2-stats">
+        <span>
+          typos: {props.sessionTypos.typos}/{props.sessionTypos.enters}
+        </span>
+        <span className="spacer"></span>
+        <span>
+          {typoRate(props.sessionTypos.typos, props.sessionTypos.enters)}
+        </span>
+      </div>
       <div className="Game-timer2-stats">
         <span className="spacer"></span>
         <span>{props.mode}</span>

@@ -4,6 +4,7 @@ import Game from "./Game";
 import { useEffect, useState } from "react";
 import { About } from "./About";
 import { Changelog } from "./Changelog";
+import { TypoStats } from "./TypoStats";
 
 function useSetting<T>(
   key: string,
@@ -316,6 +317,10 @@ function App() {
               <option value="obs">Obscordle</option>
             </select>
           </div>
+
+          <p className="Settings-label">typo stats</p>
+
+          <TypoStats />
 
           <p>{'\u00a0'}</p>
 

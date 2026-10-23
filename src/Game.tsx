@@ -15,6 +15,7 @@ import {
 } from "./util";
 import { decode, encode } from "./base64";
 import Dictionary from "./Dictionary";
+import { logTypo } from "./typos";
 
 enum GameState {
   Playing,
@@ -111,9 +112,12 @@ function Game(props: GameProps) {
     time: +new Date(),
     firstKey: +new Date(),
     penalty: 0,
-    correct: true
+    correct: true,
+    typos: 0
   }]);
   const [firstKey, setFirstKey] = useState<number | undefined>(undefined);
+  const [roundTypos, setRoundTypos] = useState(0);
+  const [sessionTypos, setSessionTypos] = useState({ typos: 0, enters: 0 });
   const [revealStep, setRevealStep] = useState<number>(-1);
 
   const currentSeedParams = () =>
@@ -143,6 +147,7 @@ function Game(props: GameProps) {
     setGameState(GameState.Playing);
     setGameNumber((x) => x + 1);
     setFirstKey(undefined);
+    setRoundTypos(0);
     doAutoguess();
   };
   const newWithLength = (length: (_: number) => number) => {
@@ -151,6 +156,7 @@ function Game(props: GameProps) {
     setGameState(GameState.Playing);
     setGuesses([]);
     setCurrentGuess("");
+    setRoundTypos(0);
     setWordLength(pre => {
         const post = length(pre);
         setTarget(Dictionary.randomTarget(props.wordlist, post));
@@ -266,7 +272,8 @@ function Game(props: GameProps) {
         time: time,
         firstKey: firstKey ?? time,
         penalty: guesses.length * props.penalty,
-        correct
+        correct,
+        typos: roundTypos
       }]);
       localStorage.setItem('log_'+mode,
                            (localStorage.getItem('log_'+mode) || '') +
@@ -286,7 +293,19 @@ function Game(props: GameProps) {
       setHint("Too short");
       return;
     }
-    if (!Dictionary.checkWord(props.wordlist, guess)) {
+    const valid = Dictionary.checkWord(props.wordlist, guess);
+    if (!autoing) {
+      logTypo({
+        time: +new Date(),
+        mode,
+        guessIndex: guesses.length,
+        typed: guess,
+        typo: !valid
+      });
+      setSessionTypos(s => ({ typos: s.typos + (valid ? 0 : 1), enters: s.enters + 1 }));
+      if (!valid) setRoundTypos(n => n + 1);
+    }
+    if (!valid) {
       setHint("Not a valid word");
       return;
     }
@@ -364,7 +383,7 @@ function Game(props: GameProps) {
     return () => {
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [currentGuess, guesses, gameState, noev, revealStep, inGame]);
+  }, [currentGuess, guesses, roundTypos, gameState, noev, revealStep, inGame]);
 
   let letterInfo = new Map<string, Clue>();
   const tableRows = Array(props.maxGuesses)
@@ -438,7 +457,7 @@ function Game(props: GameProps) {
         {!props.topbar && <div
           className="Game-new-sidebar"
         >
-          <Timer2 morelen={props.morelen} times={times} mode={mode} firstKeyTiming={props.firstKeyTiming} hibest={props.hibest} />
+          <Timer2 morelen={props.morelen} times={times} mode={mode} firstKeyTiming={props.firstKeyTiming} hibest={props.hibest} sessionTypos={sessionTypos} />
         </div>}
       </div>
       <p
