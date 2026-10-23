@@ -2,6 +2,9 @@
 // Stored as lines of "<timestamp> <mode> <guess index> <typed> <0|1 typo>".
 const key = "typolog";
 
+// Only the first few guesses (the opener sequence) are judged.
+export const openerCount = 4;
+
 export interface TypoEntry {
   time: number;
   mode: string;
@@ -11,6 +14,7 @@ export interface TypoEntry {
 }
 
 export interface OpenerStat {
+  guessIndex: number;
   opener: string;
   rounds: number;
   typos: number;
@@ -46,24 +50,30 @@ export function clearTypos() {
   } catch (err) {}
 }
 
-// Typos made on the first guess are attributed to the opener that was
+// Typos made on each opener guess are attributed to the word that was
 // eventually entered on that guess.
 export function openerStats(entries: TypoEntry[]): OpenerStat[] {
   const stats = new Map<string, OpenerStat>();
-  let pending = 0;
+  let pending = Array(openerCount).fill(0);
   for (const e of entries) {
-    if (e.guessIndex !== 0) continue;
+    const i = e.guessIndex;
+    if (i >= openerCount) continue;
+    // A first-guess entry starts a new round; drop typos left by a round
+    // that ended before reaching that guess.
+    if (i === 0 && pending[0] === 0) pending = Array(openerCount).fill(0);
     if (e.typo) {
-      ++pending;
+      ++pending[i];
       continue;
     }
-    const s = stats.get(e.typed) ?? { opener: e.typed, rounds: 0, typos: 0 };
+    const k = `${i} ${e.typed}`;
+    const s = stats.get(k) ?? { guessIndex: i, opener: e.typed, rounds: 0, typos: 0 };
     s.rounds += 1;
-    s.typos += pending;
-    stats.set(e.typed, s);
-    pending = 0;
+    s.typos += pending[i];
+    stats.set(k, s);
+    pending[i] = 0;
   }
-  return Array.from(stats.values()).sort((a, b) => b.rounds - a.rounds);
+  return Array.from(stats.values()).sort((a, b) =>
+    a.guessIndex - b.guessIndex || b.rounds - a.rounds);
 }
 
 export function typoRate(typos: number, total: number): string {

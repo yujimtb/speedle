@@ -395,6 +395,11 @@ a:active {
 .TypoStats td:first-child,
 .TypoStats th:first-child {
   text-align: left;
+}
+
+.TypoStats-openers td:nth-child(2),
+.TypoStats-openers th:nth-child(2) {
+  text-align: left;
   font-family: monospace;
 }
 

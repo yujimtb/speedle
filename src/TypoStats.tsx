@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { clearTypos, openerStats, readTypos, typoRate } from "./typos";
+import { clearTypos, openerCount, openerStats, readTypos, typoRate } from "./typos";
 
 export function TypoStats() {
   const [entries, setEntries] = useState(readTypos);
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const typos = entries.filter(e => e.typo).length;
-  const firstGuess = entries.filter(e => e.guessIndex === 0);
-  const firstTypos = firstGuess.filter(e => e.typo).length;
+  const judged = entries.filter(e => e.guessIndex < openerCount);
+  const typos = judged.filter(e => e.typo).length;
+  const byGuess = Array.from({ length: openerCount }, (_, i) => {
+    const es = judged.filter(e => e.guessIndex === i);
+    return { enters: es.length, typos: es.filter(e => e.typo).length };
+  });
   const openers = openerStats(entries);
 
   const copyCsv = async () => {
@@ -28,21 +31,24 @@ export function TypoStats() {
       <table>
         <tbody>
           <tr>
-            <td>all guesses</td>
-            <td>{typos}/{entries.length}</td>
-            <td>{typoRate(typos, entries.length)}</td>
+            <td>guesses 1-{openerCount}</td>
+            <td>{typos}/{judged.length}</td>
+            <td>{typoRate(typos, judged.length)}</td>
           </tr>
-          <tr>
-            <td>first guess</td>
-            <td>{firstTypos}/{firstGuess.length}</td>
-            <td>{typoRate(firstTypos, firstGuess.length)}</td>
-          </tr>
+          {byGuess.map((g, i) => (
+            <tr key={i}>
+              <td>guess {i + 1}</td>
+              <td>{g.typos}/{g.enters}</td>
+              <td>{typoRate(g.typos, g.enters)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <div className="TypoStats-openers">
         <table>
           <thead>
             <tr>
+              <th>#</th>
               <th>opener</th>
               <th>rounds</th>
               <th>typos</th>
@@ -51,7 +57,8 @@ export function TypoStats() {
           </thead>
           <tbody>
             {openers.map(s => (
-              <tr key={s.opener}>
+              <tr key={`${s.guessIndex} ${s.opener}`}>
+                <td>{s.guessIndex + 1}</td>
                 <td>{s.opener.toUpperCase()}</td>
                 <td>{s.rounds}</td>
                 <td>{s.typos}</td>

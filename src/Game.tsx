@@ -15,7 +15,7 @@ import {
 } from "./util";
 import { decode, encode } from "./base64";
 import Dictionary from "./Dictionary";
-import { logTypo } from "./typos";
+import { logTypo, openerCount } from "./typos";
 
 enum GameState {
   Playing,
@@ -294,7 +294,7 @@ function Game(props: GameProps) {
       return;
     }
     const valid = Dictionary.checkWord(props.wordlist, guess);
-    if (!autoing) {
+    if (!autoing && guesses.length < openerCount) {
       logTypo({
         time: +new Date(),
         mode,
