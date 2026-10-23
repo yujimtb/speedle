@@ -118,6 +118,9 @@ function Game(props: GameProps) {
   const [firstKey, setFirstKey] = useState<number | undefined>(undefined);
   const [roundTypos, setRoundTypos] = useState(0);
   const [sessionTypos, setSessionTypos] = useState({ typos: 0, enters: 0 });
+  // Set when the current guess was already logged as a typo on Enter, so
+  // clearing it with Space doesn't count it twice.
+  const typoEntered = useRef(false);
   const [revealStep, setRevealStep] = useState<number>(-1);
 
   const currentSeedParams = () =>
@@ -211,6 +214,7 @@ function Game(props: GameProps) {
     if (guesses.length === props.maxGuesses) return;
     if (/^[a-z]$/i.test(key)) {
       setFirstKey(k => k ?? +new Date());
+      if (currentGuess.length < wordLength) typoEntered.current = false;
       setCurrentGuess((guess) =>
         (guess + key.toLowerCase()).slice(0, wordLength)
       );
@@ -221,6 +225,7 @@ function Game(props: GameProps) {
       }
       tableRef.current?.focus();
     } else if (key === "Backspace") {
+      if (currentGuess !== "") typoEntered.current = false;
       setCurrentGuess((guess) => guess.slice(0, -1));
       setHint("");
     } else if (key === "Enter") {
@@ -228,6 +233,8 @@ function Game(props: GameProps) {
     } else if (key === " ") {
       // Space clears the current guess, or gives up if it's already empty.
       if (currentGuess !== "") {
+        if (!typoEntered.current) recordAttempt(currentGuess, true, "space");
+        typoEntered.current = false;
         setCurrentGuess("");
         setHint("");
       } else if (guesses.length > 0) {
@@ -280,6 +287,20 @@ function Game(props: GameProps) {
                                ',' + target + ' ' + (correct ? dur : 0));
   };
 
+  const recordAttempt = (typed: string, typo: boolean, source: "enter" | "space") => {
+    if (guesses.length >= openerCount) return;
+    logTypo({
+      time: +new Date(),
+      mode,
+      guessIndex: guesses.length,
+      typed,
+      typo,
+      source
+    });
+    setSessionTypos(s => ({ typos: s.typos + (typo ? 1 : 0), enters: s.enters + 1 }));
+    if (typo) setRoundTypos(n => n + 1);
+  };
+
   const giveUp = () => {
     setHint(
       `The answer was ${target.toUpperCase()}. (Enter to play again)`
@@ -294,16 +315,9 @@ function Game(props: GameProps) {
       return;
     }
     const valid = Dictionary.checkWord(props.wordlist, guess);
-    if (!autoing && guesses.length < openerCount) {
-      logTypo({
-        time: +new Date(),
-        mode,
-        guessIndex: guesses.length,
-        typed: guess,
-        typo: !valid
-      });
-      setSessionTypos(s => ({ typos: s.typos + (valid ? 0 : 1), enters: s.enters + 1 }));
-      if (!valid) setRoundTypos(n => n + 1);
+    if (!autoing) {
+      recordAttempt(guess, !valid, "enter");
+      typoEntered.current = !valid;
     }
     if (!valid) {
       setHint("Not a valid word");

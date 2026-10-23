@@ -15,8 +15,8 @@ export function TypoStats() {
   const openers = openerStats(entries);
 
   const copyCsv = async () => {
-    const csv = "time,mode,guess,typed,typo\n" + entries.map(e =>
-      `${new Date(e.time).toISOString()},${e.mode},${e.guessIndex + 1},${e.typed},${e.typo ? 1 : 0}`
+    const csv = "time,mode,guess,typed,typo,source\n" + entries.map(e =>
+      `${new Date(e.time).toISOString()},${e.mode},${e.guessIndex + 1},${e.typed},${e.typo ? 1 : 0},${e.source}`
     ).join("\n");
     try {
       await navigator.clipboard.writeText(csv);

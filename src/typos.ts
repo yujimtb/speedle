@@ -1,5 +1,6 @@
-// Log of full-length Enter presses: an unregistered word counts as a typo.
-// Stored as lines of "<timestamp> <mode> <guess index> <typed> <0|1 typo>".
+// Log of opener attempts: a full-length Enter of an unregistered word, or a
+// Space reset of a partly typed guess, counts as a typo. Stored as lines of
+// "<timestamp> <mode> <guess index> <typed> <0|1 typo> <e|s source>".
 const key = "typolog";
 
 // Only the first few guesses (the opener sequence) are judged.
@@ -11,6 +12,7 @@ export interface TypoEntry {
   guessIndex: number;
   typed: string;
   typo: boolean;
+  source: "enter" | "space";
 }
 
 export interface OpenerStat {
@@ -23,7 +25,7 @@ export interface OpenerStat {
 export function logTypo(e: TypoEntry) {
   try {
     localStorage.setItem(key, (localStorage.getItem(key) || "") +
-      `\n${e.time} ${e.mode} ${e.guessIndex} ${e.typed} ${e.typo ? 1 : 0}`);
+      `\n${e.time} ${e.mode} ${e.guessIndex} ${e.typed} ${e.typo ? 1 : 0} ${e.source[0]}`);
   } catch (err) {}
 }
 
@@ -33,13 +35,14 @@ export function readTypos(): TypoEntry[] {
     raw = localStorage.getItem(key) || "";
   } catch (err) {}
   return raw.split("\n").filter(x => x).map(line => {
-    const [time, mode, guessIndex, typed, typo] = line.split(" ");
+    const [time, mode, guessIndex, typed, typo, source] = line.split(" ");
     return {
       time: +time,
       mode,
       guessIndex: +guessIndex,
       typed,
       typo: typo === "1",
+      source: source === "s" ? "space" : "enter",
     };
   });
 }
